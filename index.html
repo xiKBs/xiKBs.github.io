@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krishna &mdash; Developer &amp; Explorer</title>
+    <style>
+        /* ── Google Fonts loaded via @import to avoid render blocking ── */
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap'); /* Added futuristic font for accents */
+
+        /* ════════════════════════════════════════
+           RESET & VARIABLES
+        ════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #0a0a0f;
+            --surface: #111118;
+            --accent:  #00ffb3;
+            --accent2: #7b2fff;
+            --text:    #e8e8f0;
+            --muted:   #5a5a72;
+            --border:  rgba(0,255,179,0.08);
+            --glow:    rgba(0,255,179,0.4); /* Added for glow effects */
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Space Mono', 'Courier New', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Enhanced Grid background with subtle animation ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,179,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,179,0.025) 1px, transparent 1px);
+            background-size: 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridShift 20s linear infinite;
+        }
+        @keyframes gridShift {
+            0% { background-position: 0 0; }
+            100% { background-position: 48px 48px; }
+        }
+
+        /* ════════════════════════════════════════
+           LAYOUT HELPERS
+        ═════════════════════════════════════════ */
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* ════════════════════════════════════════
+           NAVIGATION
+        ═════════════════════════════════════════ */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 200;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+        nav.scrolled { background: rgba(10, 10, 15, 0.95); }
+
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif; /* Changed to futuristic font */
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            flex-shrink: 0;
+            text-shadow: 0 0 5px var(--glow);
+        }
+
+        /* Hamburger (mobile) */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            z-index: 201;
+        }
+        .hamburger span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: color 0.2s, text-shadow 0.2s;
+        }
+        .nav-links a:hover { color: var(--accent); text-shadow: 0 0 8px var(--glow); }
+
+        /* Mobile nav drawer */
+        @media (max-width: 600px) {
+            .hamburger { display: flex; }
+
+            .nav-links {
+                position: fixed;
+                top: 60px; left: 0; right: 0;
+                flex-direction: column;
+                align-items: center;
+                gap: 0;
+                background: rgba(10,10,15,0.97);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-bottom: 1px solid var(--border);
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.35s ease, padding 0.35s ease;
+                padding: 0;
+            }
+
+            .nav-links.open {
+                max-height: 300px;
+                padding: 1rem 0;
+            }
+
+            .nav-links li { width: 100%; text-align: center; }
+
+            .nav-links a {
+                display: block;
+                padding: 0.9rem 0;
+                font-size: 0.8rem;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .nav-links li:last-child a { border-bottom: none; }
+        }
+
+        /* ════════════════════════════════════════
+           HERO
+        ═════════════════════════════════════════ */
+        .hero {
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 80px;
+            padding-bottom: 2rem;
+            position: relative;
+        }
+
+        .hero-tag {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.68rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeUp 0.6s 0.15s ease forwards;
+        }
+        .hero-tag::before {
+            content: '';
+            display: block;
+            width: 28px;
+            height: 1px;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* Enhanced Blinking dot with glow */
+        .hero-tag::after {
+            content: '';
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: blinkGlow 1.4s infinite;
+            box-shadow: 0 0 10px var(--glow);
+        }
+        @keyframes blinkGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.3; transform: scale(1.2); }
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3rem, 11vw, 6.5rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.04em;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeUp 0.7s 0.3s ease forwards;
+        }
+
+        .name-accent {
+            display: inline-block;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--accent);
+            transition: text-shadow 0.3s;
+        }
+        h1:hover .name-accent { animation: glitch 0.35s steps(2) infinite; text-shadow: 0 0 15px var(--glow); }
+
+        .hero-desc {
+            font-size: clamp(0.78rem, 2.2vw, 0.9rem);
+            line-height: 1.9;
+            color: var(--muted);
+            max-width: 500px;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeUp 0.7s 0.45s ease forwards;
+        }
+        .hero-desc strong { color: var(--text); font-weight: 400; }
+
+        .hero-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp 0.7s 0.6s ease forwards;
+        }
+
+        /* ── Enhanced Spinning badge with glow and faster spin ── */
+        .badge-wrap {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            animation: fadeIn 1s 0.9s forwards;
+            pointer-events: none;
+        }
+        .badge {
+            width: 140px; height: 140px; /* Slightly larger */
+            border: 1px solid rgba(0,255,179,0.18);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--muted);
+            animation: spin 18s linear infinite; /* Faster spin */
+            position: relative;
+            box-shadow: 0 0 20px var(--glow);
+        }
+        .badge::after {
+            content: '◆';
+            position: absolute;
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--accent);
+            font-size: 0.8rem;
+            text-shadow: 0 0 5px var(--glow);
+        }
+
+        @media (max-width: 700px) { .badge-wrap { display: none; } }
+
+        /* ── Stats bar with animation ── */
+        .stats {
+            display: flex;
+            gap: 2.5rem;
+            margin-top: 3.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            opacity: 0;
+            animation: fadeUp 0.7s 0.75s ease forwards;
+        }
+
+        .stat {
+            transition: transform 0.3s;
+        }
+        .stat:hover { transform: scale(1.1); }
+
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+            text-shadow: 0 0 5px var(--glow);
+        }
+        .stat-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        /* ════════════════════════════════════════
+           BUTTONS
+        ═════════════════════════════════════════ */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.6rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            font-weight: 700;
+            box-shadow: 0 0 10px var(--glow);
+        }
+        .btn-primary:hover {
+            background: #fff;
+            box-shadow: 0 0 28px var(--glow);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--muted);
+        }
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 15px var(--glow);
+            transform: translateY(-2px);
+        }
+
+        /* ════════════════════════════════════════
+           SECTION COMMONS
+        ═════════════════════════════════════════ */
+        section { padding: 5rem 0; }
+
+        .section-head {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+        .section-num {
+            font-size: 0.62rem;
+            color: var(--accent);
+            letter-spacing: 0.2em;
+            flex-shrink: 0;
+        }
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            white-space: nowrap;
+        }
+        .section-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--muted), transparent);
+            opacity: 0.25;
+            min-width: 0;
+        }
+
+        /* ── Enhanced Reveal animation with stagger ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ════════════════════════════════════════
+           SKILLS GRID
+        ═════════════════════════════════════════ */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 600px) {
+            .skills-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 380px) {
+            .skills-grid { grid-template-columns: 1fr; }
+        }
+
+        .skill-card {
+            background: var(--bg);
+            padding: 1.5rem 1.25rem;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.2s, box-shadow 0.3s;
+        }
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,255,179,0.06), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .skill-card:hover { background: var(--surface); box-shadow: 0 0 20px var(--glow); }
+        .skill-card:hover::before { opacity: 1; }
+
+        .skill-icon { font-size: 1.7rem; margin-bottom: 0.6rem; line-height: 1; transition: transform 0.3s; }
+        .skill-card:hover .skill-icon { transform: rotate(360deg); }
+
+        .skill-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        .skill-desc { font-size: 0.68rem; color: var(--muted); line-height: 1.6; font-style: italic; }
+
+        /* ════════════════════════════════════════
+           EXPLORE LIST
+        ═════════════════════════════════════════ */
+        .explore-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .explore-item {
+            background: var(--bg);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: background 0.2s, transform 0.25s, box-shadow 0.3s;
+            cursor: default;
+        }
+        .explore-item:hover {
+            background: var(--surface);
+            transform: translateX(6px);
+            box-shadow: 0 0 15px var(--glow);
+        }
+        .explore-item:hover .explore-arrow { color: var(--accent); transform: translateX(5px); }
+
+        .explore-num { color: var(--accent); font-size: 0.65rem; min-width: 2rem; flex-shrink: 0; }
+        .explore-text {
+            flex: 1;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+        }
+        .explore-tag {
+            font-size: 0.6rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border: 1px solid rgba(90,90,114,0.4);
+            padding: 0.2rem 0.55rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: border-color 0.2s;
+        }
+        .explore-item:hover .explore-tag { border-color: var(--accent); }
+        .explore-arrow {
+            color: var(--muted);
+            transition: color 0.2s, transform 0.2s;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 480px) {
+            .explore-tag { display: none; }
+            .explore-item { padding: 1rem 1.25rem; gap: 1rem; }
+        }
+
+        /* ════════════════════════════════════════
+           PROJECTS (New Section)
+        ═════════════════════════════════════════ */
+        #projects .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .project-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px var(--glow);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 180px;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem; /* Placeholder emoji */
+        }
+
+        .project-content {
+            padding: 1.5rem;
+        }
+
+        .project-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-desc {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .project-tech {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tech-tag {
+            font-size: 0.6rem;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        /* ════════════════════════════════════════
+           CONTACT
+        ═════════════════════════════════════════ */
+        .contact-box {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,255,179,0.12);
+            padding: 3rem 2.5rem;
+            text-align: center;
+            transition: box-shadow 0.3s;
+        }
+        .contact-box:hover { box-shadow: 0 0 30px var(--glow); }
+        .contact-box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(0,255,179,0.07), transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .contact-box > * { position: relative; z-index: 1; }
+
+        .contact-box h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.6rem, 5vw, 2.4rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.75rem;
+        }
+        .contact-box p {
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.8;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 480px) {
+            .contact-box { padding: 2rem 1.25rem; }
+        }
+
+        /* ════════════════════════════════════════
+           FOOTER
+        ═════════════════════════════════════════ */
+        footer {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 1.75rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.68rem;
+            color: var(--muted);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: text-shadow 0.2s;
+        }
+        footer a:hover { text-shadow: 0 0 8px var(--glow); }
+
+        @media (max-width: 500px) {
+            footer { flex-direction: column; text-align: center; }
+        }
+
+        /* ════════════════════════════════════════
+           KEYFRAMES
+        ═════════════════════════════════════════ */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: none; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes glitch {
+            0%   { text-shadow:  2px 0 var(--accent2), -2px 0 var(--accent); }
+            50%  { text-shadow: -2px 0 var(--accent2),  2px 0 var(--accent); }
+            100% { text-shadow:  2px 0 var(--accent2), -2px 0 var(--accent); }
+        }
+
+        /* ════════════════════════════════════════
+           SCROLLBAR (optional polish)
+        ═════════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav>
+    <div class="nav-inner">
+        <a href="#about" class="logo">K/</a>
+        <button class="hamburger" id="ham" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="#about" onclick="closeNav()">About</a></li>
+            <li><a href="#skills" onclick="closeNav()">Skills</a></li>
+            <li><a href="#projects" onclick="closeNav()">Projects</a></li> <!-- Added Projects link -->
+            <li><a href="#explore" onclick="closeNav()">Explore</a></li>
+            <li><a href="#contact" onclick="closeNav()">Contact</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<section class="hero" id="about">
+    <div class="container">
+
+        <div class="hero-tag">Available for Projects</div>
+
+        <h1>Hello,<br>I'm <span class="name-accent">Krishna</span></h1>
+
+        <p class="hero-desc">
+            A passionate <strong>developer</strong> who loves writing code, breaking things,
+            and building them back better. Always <strong>exploring</strong> what's next &mdash;
+            new tech, new ideas, new possibilities.
+        </p>
+
+        <div class="hero-actions">
+            <a href="#contact" class="btn btn-primary">Let's Connect</a>
+            <a href="#skills" class="btn btn-outline">View Skills</a>
+        </div>
+
+        <!-- Spinning badge — desktop only via CSS -->
+        <div class="badge-wrap" aria-hidden="true">
+            <div class="badge">Krishna &middot; Dev &middot; Explorer &middot; Builder &middot; Innovator</div> <!-- Added extra text -->
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-num">&infin;</div>
+                <div class="stat-label">Lines Coded</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">24/7</div>
+                <div class="stat-label">Curious Mind</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">100%</div>
+                <div class="stat-label">Passion</div>
+            </div>
+            <div class="stat"> <!-- Added new stat -->
+                <div class="stat-num">∞</div>
+                <div class="stat-label">Ideas</div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ══════════════════ SKILLS ══════════════════ -->
+<section id="skills">
+    <div class="container">
+
+        <div class="section-head reveal">
+            <span class="section-num">01</span>
+            <h2 class="section-title">Skills</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="skills-grid">
+            <div class="skill-card reveal">
+                <div class="skill-icon">&#128187;</div>
+                <div class="skill-name">Coding</div>
+                <div class="skill-desc">Turning logic into reality, one function at a time</div>
+            </div>
+            <div class="skill-card reveal">
+                <div class="skill-icon">&#128301;</div>
+                <div class="skill-name">Exploring</div>
+                <div class="skill-desc">Always on the edge of what's new and exciting</div>
+            </div>
+            <div class="skill-card reveal">
+                <div class="skill-icon">&#129513;</div>
+                <div class="skill-name">Problem Solving</div>
+                <div class="skill-desc">Every bug is just a puzzle waiting to be solved</div>
+            </div>
+            <div class="skill-card reveal">
+                <div class="skill-icon">&#128640;</div>
+                <div class="skill-name">Building</div>
+                <div class="skill-desc">Shipping things that actually work and matter</div>
+            </div>
+            <div class="skill-card reveal">
+                <div class="skill-icon">&#128218;</div>
+                <div class="skill-name">Learning</div>
+                <div class="skill-desc">Never stop, never settle, always level up</div>
+            </div>
+            <div class="skill-card reveal">
+                <div class="skill-icon">&#128161;</div>
+                <div class="skill-name">Innovating</div>
+                <div class="skill-desc">Connecting dots others haven't seen yet</div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ══════════════════ PROJECTS (New Section) ══════════════════ -->
+<section id="projects">
+    <div class="container">
+
+        <div class="section-head reveal">
+            <span class="section-num">02</span>
+            <h2 class="section-title">Projects</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="projects-grid reveal">
+            <div class="project-card">
+                <div class="project-image">&#128640;</div> <!-- Placeholder -->
+                <div class="project-content">
+                    <div class="project-title">Project One</div>
+                    <div class="project-desc">A cutting-edge web app built with modern tech stacks. Revolutionizing user experiences.</div>
+                    <div class="project-tech">
+                        <span class="tech-tag">React</span>
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">AWS</span>
+                    </div>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-image">&#128187;</div>
+                <div class="project-content">
+                    <div class="project-title">Project Two</div>
+                    <div class="project-desc">An AI-powered tool for developers. Automating workflows and boosting productivity.</div>
+                    <div class="project-tech">
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">TensorFlow</span>
+                        <span class="tech-tag">Docker</span>
+                    </div>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-image">&#129513;</div>
+                <div class="project-content">
+                    <div class="project-title">Project Three</div>
+                    <div class="project-desc">Open-source contribution to a popular repo. Enhancing features for the community.</div>
+                    <div class="project-tech">
+                        <span class="tech-tag">Git</span>
+                        <span class="tech-tag">JavaScript</span>
+                        <span class="tech-tag">Open Source</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ══════════════════ EXPLORE ══════════════════ -->
+<section id="explore">
+    <div class="container">
+
+        <div class="section-head reveal">
+            <span class="section-num">03</span> <!-- Updated number -->
+            <h2 class="section-title">What I Explore</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="explore-list reveal">
+            <div class="explore-item">
+                <span class="explore-num">01</span>
+                <span class="explore-text">Web Development</span>
+                <span class="explore-tag">Frontend &amp; Backend</span>
+                <span class="explore-arrow">&#8594;</span>
+            </div>
+            <div class="explore-item">
+                <span class="explore-num">02</span>
+                <span class="explore-text">Open Source Projects</span>
+                <span class="explore-tag">Community</span>
+                <span class="explore-arrow">&#8594;</span>
+            </div>
+            <div class="explore-item">
+                <span class="explore-num">03</span>
+                <span class="explore-text">New Technologies</span>
+                <span class="explore-tag">AI / Cloud / DevOps</span>
+                <span class="explore-arrow">&#8594;</span>
+            </div>
+            <div class="explore-item">
+                <span class="explore-num">04</span>
+                <span class="explore-text">System Design</span>
+                <span class="explore-tag">Architecture</span>
+                <span class="explore-arrow">&#8594;</span>
+            </div>
+            <div class="explore-item">
+                <span class="explore-num">05</span>
+                <span class="explore-text">Side Projects</span>
+                <span class="explore-tag">Build &amp; Ship</span>
+                <span class="explore-arrow">&#8594;</span>
+            </div>
+            <div class="explore-item"> <!-- Added new item -->
+                <span class="explore-num">06</span>
+                <span class="explore-text">Blockchain & Web3</span>
+                <span class="explore-tag">Decentralized Future</span>
+                <span class="explore-arrow">&#8594;</span>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ══════════════════ CONTACT ══════════════════ -->
+<section id="contact">
+    <div class="container">
+        <div class="contact-box reveal">
+            <h2>Let's Build Something<br>Awesome Together.</h2> <!-- Slightly updated text -->
+            <p>Got an idea? A project? Or just want to geek out<br>about the latest tech? I'm always up for it.</p>
+            <!-- Plain mailto — no obfuscation scripts needed -->
+            <a href="mailto:hello@krishna.dev" class="btn btn-primary">Say Hello &#8594;</a>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<div class="container">
+    <footer>
+        <span>&copy; 2026 Krishna</span> <!-- Updated year -->
+        <span>Built with &#10084;&#65039; &amp; lots of caffeine</span>
+        <a href="https://xikbs.github.io" target="_blank">xikbs.github.io</a>
+    </footer>
+</div>
+
+<!-- ══════════════════ JS ══════════════════ -->
+<script>
+    /* ── Hamburger menu ── */
+    const ham = document.getElementById('ham');
+    const navLinks = document.getElementById('nav-links');
+
+    ham.addEventListener('click', () => {
+        ham.classList.toggle('open');
+        navLinks.classList.toggle('open');
+    });
+
+    function closeNav() {
+        ham.classList.remove('open');
+        navLinks.classList.remove('open');
+    }
+
+    /* ── Nav scroll effect ── */
+    window.addEventListener('scroll', () => {
+        const nav = document.querySelector('nav');
+        nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    /* ── Scroll reveal (threshold:0 fires as soon as 1px is visible — fixes mobile) ── */
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+
+            const el = entry.target;
+            let delay = 0;
+
+            // stagger sibling elements
+            if (el.classList.contains('skill-card') || el.classList.contains('project-card') || el.classList.contains('explore-item')) {
+                const siblings = el.parentNode.querySelectorAll('.reveal');
+                const idx = Array.from(siblings).indexOf(el);
+                delay = idx * 100; // Increased stagger for better effect
+            }
+
+            setTimeout(() => el.classList.add('visible'), delay);
+            observer.unobserve(el);
+        });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    /* ── Smooth scroll (polyfill for Safari) ── */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+            const id = a.getAttribute('href');
+            const target = document.querySelector(id);
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    /* ── Hide custom cursor on touch devices ── */
+    if (window.matchMedia('(hover: none)').matches) {
+        document.querySelectorAll('.cursor, .cursor-ring').forEach(el => el.remove());
+    }
+</script>
+</body>
+</html>
